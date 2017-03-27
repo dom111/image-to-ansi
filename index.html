@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Image to ANSI</title>
+
+        <link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"/>
+        <link rel="stylesheet" type="text/css" href="https://cdn.rawgit.com/itsjavi/bootstrap-colorpicker/master/dist/css/bootstrap-colorpicker.min.css"/>
+        <link rel="stylesheet" type="text/css" href="style.css"/>
+    </head>
+    <body>
+        <div class="jumbotron">
+            <div class="container">
+                <h1>Image to <code>ANSI</code></h1>
+                <p>Provide a file via the input and it will be immediately converted to ANSI format using the options supplied below.</p>
+            </div>
+        </div>
+
+        <div class="container">
+            <section class="parser panel panel-primary">
+                <div class="panel-heading panel-heading-lg">
+                    <h2 class="panel-title panel-title-lg">Upload</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="form-group label-floating">
+                        <label class="btn btn-primary btn-file">
+                            Browse... <input type="file" class="hidden">
+                        </label>
+                    </div>
+
+                    <pre class="parsed"></pre>
+
+                    <div class="form-group label-floating">
+                        <label class="control-label">Copy the below into your terminal to test:</label>
+                        <pre class="copy-paste"><code>printf '<span class="contents"></span>';</code><a href="#copy" class="copy btn btn-xs btn-primary" data-clipboard-target="pre.copy-paste code">Copy</a></pre>
+                    </div>
+                </div>
+
+                <div class="panel-footer">
+                    <aside class="options">
+                        <h3>Options</h3>
+
+                        <div class="global-options">
+                            <div class="form-group">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="unicode" checked> Unicode
+                                    </label>
+                                </div>
+                                <p class="help-block">Creates two pixels per horizontal space using <code>▄</code> and changing both the background and foreground colours, if this is disabled images will be twice as wide.</p>
+                            </div>
+
+                            <h4>Colours</h4>
+                            <div class="form-group">
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="colours" value="256" checked>
+                                        256
+                                    </label>
+                                </div>
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio" name="colours" value="true">
+                                        True colour
+                                    </label>
+                                </div>
+
+                                <p class="help-block">To test a true colour terminal emulator, try the <a href="https://chrome.google.com/webstore/detail/secure-shell/pnhechapfaindjhompbnflcldabbghjo">Google Chrome extension Secure Shell</a>.</p>
+                            </div>
+                        </div>
+
+                        <div class="specific-options">
+                            <h4>Max width</h4>
+                            <div class="form-group">
+                                <div class="text">
+                                    <input type="text" name="width" value="80"/>
+                                </div>
+                            </div>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+        </div>
+
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/clipboard.js/1.6.0/clipboard.min.js"></script>
+        <script src="https://cdn.rawgit.com/itsjavi/bootstrap-colorpicker/master/dist/js/bootstrap-colorpicker.js"></script>
+
+        <script type="text/javascript" src="parse.js"></script>
+        <script type="text/javascript" src="app.js"></script>
+    </body>
+</html>
