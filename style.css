@@ -1,4 +1,4 @@
-@import 'terminal-preview/terminal.css';
+@import 'terminal-preview/dist/terminal-min.css';
 
 .loading::after { content: 'Loading...'; margin-left: 1em; font-size: 0.8em; }
 
