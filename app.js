@@ -122,7 +122,7 @@
                 }
             }
 
-            $('pre.parsed').html(parse(content + '\\e[0m\n'));
+            $('pre.terminal').html(parse(content + '\\e[0m\n'));
             $('pre.copy-paste .contents').html(content);
         },
         _getOptions = function() {
