@@ -2,3 +2,10 @@
 
 .loading::after { content: 'Loading...'; margin-left: 1em; font-size: 0.8em; }
 
+h1 .version { opacity: 0; font-size: 0.8em; font-family: monospace; letter-spacing: -5px; transition: .25s opacity linear; }
+h1:hover .version { opacity: .3; }
+
+pre { position: relative; }
+pre a.btn { display: none; position: absolute; right: 2px; top: 2px; }
+pre:hover a.btn { display: block; }
+.no-clipboard pre:hover a.btn { display: none; }
