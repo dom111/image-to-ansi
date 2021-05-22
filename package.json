@@ -1,0 +1,27 @@
+{
+  "name": "image-to-ansi",
+  "version": "0.2.0",
+  "description": "A site to convert an image into ANSI.",
+  "scripts": {
+    "build": "npm run prettier:format && npm run build:esbuild",
+    "build:esbuild": "node esbuild.js prod",
+    "build:watch": "node esbuild.js dev watch",
+    "prettier:check": "prettier --config .prettierrc 'src/**/*' esbuild.js",
+    "prettier:format": "prettier --config .prettierrc 'src/**/*' esbuild.js --write"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dom111/image-to-ansi.git"
+  },
+  "author": "dom111",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dom111/image-to-ansi/issues"
+  },
+  "homepage": "https://github.com/dom111/image-to-ansi#readme",
+  "dependencies": {
+    "esbuild": "^0.12.1",
+    "esbuild-sass-plugin": "^1.4.0",
+    "prettier": "^2.3.0"
+  }
+}
