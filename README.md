@@ -8,4 +8,4 @@ never sent to the server as all the processing work is carried out in-browser by
 JavaScript.
 
 Feel free to fork this, you can also
-[see it in action here](https://dom.hastin.gs/files/image-to-ansi).
+[see it in action here](https://dom111.github.io/image-to-ansi).
