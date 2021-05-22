@@ -1,4 +1,5 @@
-import readImage from './readImage';
+import readImage, { loadImage } from './readImage';
+import process from './process';
 
 declare var parse: (s: string) => string;
 
@@ -35,6 +36,11 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
     'input[type="file"]'
   ) as HTMLInputElement,
   spinner = fileButton.querySelector('.spinner-border') as HTMLSpanElement,
+  urlInput = document.querySelector('input[type="url"]') as HTMLInputElement,
+  errorContainer = document.querySelector('.error-container') as HTMLDivElement,
+  errorContent = errorContainer.querySelector(
+    '.error-content'
+  ) as HTMLDivElement,
   coloursInputs = Array.from(
     document.querySelectorAll('input[name="colours"]')
   ) as HTMLInputElement[],
@@ -49,38 +55,70 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
   ) as HTMLInputElement,
   terminalPreview = document.querySelector('pre.terminal') as HTMLPreElement,
   copyPaste = document.querySelector('pre.copy-paste code') as HTMLElement,
-  generate = (done: () => void = () => {}) => {
-    const file = fileInput?.files?.[0];
-
-    if (!file) {
-      done();
+  displayError = (error: string = '') => {
+    if (error === '') {
+      errorContainer.classList.add('d-none');
+      errorContent.innerText = '';
 
       return;
     }
 
-    readImage(file, {
-      colours: coloursInputs.reduce((value: string, el) => {
-        if (el.checked) {
-          return el.value;
-        }
+    errorContainer.classList.remove('d-none');
+    errorContent.innerText = error;
+  },
+  processImage = (url: string, done: () => void = () => {}): Promise<void> =>
+    loadImage(url)
+      .then((image) => {
+        const ansiEscape = process(image, {
+          colours: coloursInputs.reduce((value: string, el) => {
+            if (el.checked) {
+              return el.value;
+            }
 
-        return value;
-      }, '256'),
-      maxHeight: parseInt(maxHeightInput.value, 10),
-      maxWidth: parseInt(maxWidthInput.value, 10),
-      unicode: unicodeInput.checked,
-    })
-      .then((ansiEscape) => {
+            return value;
+          }, '256'),
+          maxHeight: parseInt(maxHeightInput.value, 10),
+          maxWidth: parseInt(maxWidthInput.value, 10),
+          unicode: unicodeInput.checked,
+        });
+
         terminalPreview.innerText = ansiEscape;
         copyPaste.innerText = `printf "${ansiEscape}";`;
+
+        displayError('');
       })
-      .catch((e) => {
-        console.error(e);
-      })
-      .finally(() => {
-        done();
-      });
+      .catch((e) => displayError(e.message))
+      .finally(() => done()),
+  generate = (done: () => void = () => {}) => {
+    const file = fileInput?.files?.[0],
+      url = urlInput.value;
+
+    if (file) {
+      readImage(file)
+        .then((url) => processImage(url, done))
+        .catch((e) => displayError(e.message));
+
+      return;
+    }
+
+    if (url) {
+      processImage(url, done);
+    }
   };
+
+fileInput.addEventListener('input', () => {
+  urlInput.value = '';
+});
+
+urlInput.addEventListener('input', (event) => {
+  if (!urlInput.reportValidity() || urlInput.value === '') {
+    event.stopImmediatePropagation();
+
+    return;
+  }
+
+  fileInput.value = '';
+});
 
 [
   ...coloursInputs,
@@ -88,13 +126,16 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
   maxWidthInput,
   unicodeInput,
   fileInput,
+  urlInput,
 ].forEach((input) =>
   input.addEventListener('input', () => {
     fileButton.classList.add('disabled');
+    urlInput.setAttribute('disabled', '');
     spinner.classList.remove('d-none');
 
     generate(() => {
       fileButton.classList.remove('disabled');
+      urlInput.removeAttribute('disabled');
       spinner.classList.add('d-none');
     });
   })
