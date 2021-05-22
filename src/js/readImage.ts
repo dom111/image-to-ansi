@@ -1,38 +1,40 @@
-import { process, processOptions } from './process';
-
-export const readImage = (
-  file: File,
-  options: processOptions
-): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader(),
-      image = new Image();
+export const readImage = (file: File): Promise<string> =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
 
     reader.addEventListener('load', (event) => {
       const result = event?.target?.result as string;
 
       if (!result) {
-        console.error('readImage: No file.', event);
+        reject(new TypeError('readImage: No file.'));
 
         return;
       }
 
-      image.src =
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKAQMAAAC3/F3+AAAAA1BMVEUAAACnej3aAAAAAXRSTlPHReaPdQAAAApJREFUCNdjwAsAAB4AAdpxxYoAAAAASUVORK5CYII=';
-
-      image.addEventListener('load', () => {
-        try {
-          resolve(process(image, options));
-        } catch (e) {
-          reject(e);
-        }
-      });
-
-      image.src = result;
+      resolve(result);
     });
 
     reader.readAsDataURL(file);
   });
-};
+
+export const loadImage = (url: string): Promise<CanvasImageSource> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+
+    image.src =
+      'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKAQMAAAC3/F3+AAAAA1BMVEUAAACnej3aAAAAAXRSTlPHReaPdQAAAApJREFUCNdjwAsAAB4AAdpxxYoAAAAASUVORK5CYII=';
+
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', () =>
+      reject(new Error(`Error loading image from URL: '${url}'.`))
+    );
+
+    try {
+      image.setAttribute('crossOrigin', 'Anonymous');
+      image.src = url;
+    } catch (e) {
+      reject(e);
+    }
+  });
 
 export default readImage;
