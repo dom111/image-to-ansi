@@ -35,12 +35,13 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
   fileInput = fileButton.querySelector(
     'input[type="file"]'
   ) as HTMLInputElement,
-  spinner = fileButton.querySelector('.spinner-border') as HTMLSpanElement,
+  urlContainer = document.querySelector('.url-container') as HTMLDivElement,
   urlInput = document.querySelector('input[type="url"]') as HTMLInputElement,
   errorContainer = document.querySelector('.error-container') as HTMLDivElement,
   errorContent = errorContainer.querySelector(
     '.error-content'
   ) as HTMLDivElement,
+  optionsSection = document.querySelector('.options') as HTMLElement,
   coloursInputs = Array.from(
     document.querySelectorAll('input[name="colours"]')
   ) as HTMLInputElement[],
@@ -104,6 +105,8 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
     if (url) {
       processImage(url, done);
     }
+
+    done();
   };
 
 fileInput.addEventListener('input', () => {
@@ -128,15 +131,21 @@ urlInput.addEventListener('input', (event) => {
   fileInput,
   urlInput,
 ].forEach((input) =>
-  input.addEventListener('input', () => {
-    fileButton.classList.add('disabled');
-    urlInput.setAttribute('disabled', '');
-    spinner.classList.remove('d-none');
+  input.addEventListener('input', ({ target }) => {
+    requestAnimationFrame(() =>
+      [fileButton, urlContainer, optionsSection].forEach((el) =>
+        el.classList.add('loading')
+      )
+    );
 
     generate(() => {
-      fileButton.classList.remove('disabled');
-      urlInput.removeAttribute('disabled');
-      spinner.classList.add('d-none');
+      [fileButton, urlContainer, optionsSection].forEach((el) =>
+        el.classList.remove('loading')
+      );
+
+      if (target === urlInput) {
+        urlInput.focus();
+      }
     });
   })
 );
