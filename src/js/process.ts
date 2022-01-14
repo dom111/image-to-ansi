@@ -12,12 +12,35 @@ const canvas: HTMLCanvasElement = document.createElement('canvas'),
     '2d'
   ) as CanvasRenderingContext2D;
 
+const rgbaToAnsi = (
+    rgba: Uint8ClampedArray | [number, number, number, number],
+    options: processOptions,
+    foreground: boolean = false
+  ): string => {
+    const [r, g, b] = rgba;
+
+    // if we're mostly transparent (less than 0.05 opacity) return transparent (default)
+    if (isTransparent(rgba)) {
+      return foreground ? '39' : '49';
+    }
+
+    if (options.colours === 'true') {
+      return `${foreground ? 38 : 48};2;${r ?? 0};${g ?? 0};${b ?? 0}`;
+    }
+
+    return `${foreground ? 38 : 48};5;${rgbToTerm(r ?? 0, g ?? 0, b ?? 0)}`;
+  },
+  isTransparent = ([, , , a]:
+    | Uint8ClampedArray
+    | [number, number, number, number]): boolean => (a ?? 0) < 13;
+
 export const process = (
   image: CanvasImageSource,
   options: processOptions
 ): string => {
   let imageWidth = image.width as number,
-    imageHeight = image.height as number;
+    imageHeight = image.height as number,
+    content: string = '';
 
   if (imageWidth > options.maxWidth) {
     const scale = imageWidth / options.maxWidth;
@@ -41,120 +64,61 @@ export const process = (
   const imageData = context.getImageData(0, 0, imageWidth, imageHeight),
     pixelData = imageData.data;
 
-  let content: string = '';
-
   // Loop over each pixel and invert the color.
-  for (var i = 0, n = pixelData.length, row = 0; i < n; ) {
-    if (options.colours === 'true') {
-      if (options.unicode) {
-        if (
-          pixelData[i] === pixelData[i + imageWidth * 4] &&
-          pixelData[i + 1] === pixelData[i + 1 + imageWidth * 4] &&
-          pixelData[i + 2] === pixelData[i + 2 + imageWidth * 4]
-        ) {
-          content +=
-            '\\e[48;2;' +
-            pixelData[i] +
-            ';' +
-            pixelData[i + 1] +
-            ';' +
-            pixelData[i + 2] +
-            'm ';
-        } else {
-          if (imageHeight - row === 1) {
-            content +=
-              '\\e[0m\\e[48;2;' +
-              pixelData[i] +
-              ';' +
-              pixelData[i + 1] +
-              ';' +
-              pixelData[i + 2] +
-              'm ';
-          } else {
-            content +=
-              '\\e[48;2;' +
-              pixelData[i] +
-              ';' +
-              pixelData[i + 1] +
-              ';' +
-              pixelData[i + 2] +
-              'm\\e[38;2;' +
-              pixelData[i + imageWidth * 4] +
-              ';' +
-              pixelData[i + 1 + imageWidth * 4] +
-              ';' +
-              pixelData[i + 2 + imageWidth * 4] +
-              'm▄';
-          }
-        }
+  for (let i = 0, n = pixelData.length; i < n; ) {
+    const endOfLine = (): boolean => i > 0 && (i / 4) % imageWidth === 0;
 
-        i += 4;
+    if (options.unicode) {
+      const top = pixelData.slice(i, i + 4),
+        bottom = pixelData.slice(i + imageWidth * 4, i + 4 + imageWidth * 4);
 
-        if (i && !((i / 4) % imageWidth)) {
-          content += '\\e[0m\n';
-          i += 4 * imageWidth;
-          row += 2;
-        }
+      if (
+        (top[0] === bottom[0] &&
+          top[1] === bottom[1] &&
+          top[2] === bottom[2] &&
+          !isTransparent(top) &&
+          !isTransparent(bottom)) ||
+        (isTransparent(top) && isTransparent(bottom))
+      ) {
+        content += `\x1b[${rgbaToAnsi(top, options)}m `;
       } else {
-        content +=
-          '\\e[48;2;' +
-          pixelData[i] +
-          ';' +
-          pixelData[i + 1] +
-          ';' +
-          pixelData[i + 2] +
-          'm  ';
-        i += 4;
-        row++;
-
-        if (i && !((i / 4) % imageWidth)) {
-          content += '\\e[0m\n';
+        if (isTransparent(bottom) && !isTransparent(top)) {
+          content += `\x1b[${rgbaToAnsi(bottom, options)};${rgbaToAnsi(
+            top,
+            options,
+            true
+          )}m▀`;
+        } else {
+          content += `\x1b[${rgbaToAnsi(bottom, options, true)};${rgbaToAnsi(
+            top,
+            options
+          )}m▄`;
         }
       }
-    } else {
-      if (options.unicode) {
-        const _bg = rgbToTerm(pixelData[i], pixelData[i + 1], pixelData[i + 2]),
-          _fg = rgbToTerm(
-            pixelData[i + imageWidth * 4],
-            pixelData[i + 1 + imageWidth * 4],
-            pixelData[i + 2 + imageWidth * 4]
-          );
 
-        if (_bg === _fg) {
-          content += '\\e[48;5;' + _bg + 'm ';
-        } else {
-          if (imageHeight - row === 1) {
-            content += '\\e[0m\\e[48;5;' + _bg + 'm ';
-          } else {
-            content += '\\e[48;5;' + _bg + 'm\\e[38;5;' + _fg + 'm▄';
-          }
-        }
+      i += 4;
 
-        i += 4;
+      if (endOfLine()) {
+        i += 4 * imageWidth;
 
-        if (i && !((i / 4) % imageWidth)) {
-          content += '\\e[0m\n';
-          i += 4 * imageWidth;
-          row += 2;
-        }
-      } else {
-        content +=
-          '\\e[48;5;' +
-          rgbToTerm(pixelData[i], pixelData[i + 1], pixelData[i + 2]) +
-          'm  ';
-        i += 4;
-        row++;
-
-        if (i && !((i / 4) % imageWidth)) {
-          content += '\\e[0m\n';
-        }
+        content += '\x1b[m\n';
       }
+
+      continue;
+    }
+
+    content += `\x1b[${rgbaToAnsi(pixelData.slice(i, i + 4), options)}m  `;
+
+    i += 4;
+
+    if (endOfLine()) {
+      content += '\x1b[m\n';
     }
   }
 
   // minimise output, replacing contiguous definitions
-  while (content.match(/(\\e\[[\d;]+m)([▄ ]+)\1/g)) {
-    content = content.replace(/(\\e\[[\d;]+m)([▄ ]+)\1/g, '$1$2');
+  while (content.match(/(\x1b\[[0-9;]+m)([▄▀ ]+)\1/)) {
+    content = content.replace(/(\x1b\[[0-9;]+m)([▄▀ ]+)\1/g, '$1$2');
   }
 
   return content;

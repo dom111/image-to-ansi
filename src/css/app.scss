@@ -1,3 +1,6 @@
+@use '~xterm/css/xterm.css';
+@use '~bootstrap/dist/css/bootstrap.min.css';
+
 :root {
   --bs-light: #eee;
 }
@@ -63,4 +66,33 @@ pre {
   max-height: 40vh;
   overflow-x: hidden;
   overflow-y: auto;
+}
+
+.github-corner {
+  .octo-arm {
+    @media (max-width: 500px) {
+      animation: octocat-wave 560ms ease-in-out
+    }
+  }
+
+  &:hover .octo-arm {
+    animation: octocat-wave 560ms ease-in-out;
+    transform-origin: 130px 106px;
+
+    @media (max-width: 500px) {
+      animation: none
+    }
+  }
+}
+
+@keyframes octocat-wave {
+  0%, 100% {
+    transform: rotate(0)
+  }
+  20%, 60% {
+    transform: rotate(-25deg)
+  }
+  40%, 80% {
+    transform: rotate(10deg)
+  }
 }

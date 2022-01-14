@@ -1,7 +1,9 @@
 import readImage, { loadImage } from './readImage';
 import process from './process';
+import { Terminal } from 'xterm';
+import { FitAddon } from 'xterm-addon-fit';
 
-declare var parse: (s: string) => string;
+import 'bootstrap/dist/js/bootstrap.bundle.min';
 
 document.addEventListener('click', (event): void => {
   const eventTarget = event.target;
@@ -28,7 +30,9 @@ document.addEventListener('click', (event): void => {
     return;
   }
 
-  navigator.clipboard.writeText((contentElement as HTMLElement).innerText);
+  navigator.clipboard.writeText(
+    (contentElement as HTMLElement).innerText.replace(/\x1b/g, '\\e')
+  );
 });
 
 const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
@@ -53,7 +57,15 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
   unicodeInput = document.querySelector(
     'input[name="unicode"]'
   ) as HTMLInputElement,
-  terminalPreview = document.querySelector('pre.terminal') as HTMLPreElement,
+  terminal = new Terminal({
+    convertEol: true,
+    theme: {
+      background: '#272822',
+      cursor: 'transparent',
+      foreground: '#f8f8f2',
+    },
+  }),
+  fit = new FitAddon(),
   copyPaste = document.querySelector('pre.copy-paste code') as HTMLElement,
   displayError = (error: string = '') => {
     if (error === '') {
@@ -82,8 +94,9 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
           unicode: unicodeInput.checked,
         });
 
-        terminalPreview.innerText = ansiEscape;
-        copyPaste.innerText = `printf "${ansiEscape}";`;
+        terminal.reset();
+        terminal.write(ansiEscape);
+        copyPaste.innerText = `printf "${ansiEscape.replace(/\x1b/g, '\\e')}";`;
 
         displayError('');
       })
@@ -105,6 +118,13 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
       processImage(url, done);
     }
   };
+
+terminal.loadAddon(fit);
+terminal.open(document.querySelector('div.terminal') as HTMLDivElement);
+
+fit.fit();
+
+window.addEventListener('resize', () => fit.fit());
 
 fileInput.addEventListener('input', () => {
   urlInput.value = '';
