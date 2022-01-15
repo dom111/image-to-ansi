@@ -116,7 +116,11 @@ const fileButton = document.querySelector('.parser .btn') as HTMLLabelElement,
 
     if (url) {
       processImage(url, done);
+
+      return;
     }
+
+    requestAnimationFrame(done);
   };
 
 terminal.loadAddon(fit);
